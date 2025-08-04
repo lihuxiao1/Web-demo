@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>排序算法可视化演示</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .bar {
+            transition: all 0.3s ease;
+            border-radius: 4px 4px 0 0;
+        }
+        .bar.comparing {
+            background-color: #ef4444 !important;
+        }
+        .bar.swapping {
+            background-color: #f59e0b !important;
+        }
+        .bar.sorted {
+            background-color: #10b981 !important;
+        }
+        .algorithm-card {
+            transition: all 0.3s ease;
+        }
+        .algorithm-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- 头部 -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 py-6">
+            <h1 class="text-3xl font-bold text-gray-900 text-center">排序算法可视化演示</h1>
+            <p class="text-gray-600 text-center mt-2">交互式学习经典排序算法</p>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <!-- 控制面板 -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div class="flex flex-wrap gap-4 items-center justify-center">
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium text-gray-700">数组大小:</label>
+                    <input type="range" id="arraySize" min="5" max="50" value="20" class="w-24">
+                    <span id="arraySizeValue" class="text-sm text-gray-600">20</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium text-gray-700">速度:</label>
+                    <input type="range" id="speed" min="1" max="10" value="5" class="w-24">
+                    <span id="speedValue" class="text-sm text-gray-600">5</span>
+                </div>
+                <button id="generateArray" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+                    生成新数组
+                </button>
+                <button id="stopSort" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors" disabled>
+                    停止排序
+                </button>
+            </div>
+        </div>
+
+        <!-- 可视化区域 -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold text-gray-800">排序可视化</h2>
+                <div class="flex gap-2 text-sm">
+                    <span class="flex items-center gap-1">
+                        <div class="w-4 h-4 bg-blue-500 rounded"></div>
+                        未排序
+                    </span>
+                    <span class="flex items-center gap-1">
+                        <div class="w-4 h-4 bg-red-500 rounded"></div>
+                        正在比较
+                    </span>
+                    <span class="flex items-center gap-1">
+                        <div class="w-4 h-4 bg-yellow-500 rounded"></div>
+                        正在交换
+                    </span>
+                    <span class="flex items-center gap-1">
+                        <div class="w-4 h-4 bg-green-500 rounded"></div>
+                        已排序
+                    </span>
+                </div>
+            </div>
+            <div id="arrayContainer" class="flex items-end justify-center h-64 bg-gray-50 rounded p-4">
+                <!-- 排序条形图将在这里生成 -->
+            </div>
+            <div id="algorithmInfo" class="mt-4 p-4 bg-gray-50 rounded">
+                <h3 class="font-semibold text-gray-800 mb-2">选择一个排序算法开始演示</h3>
+                <p class="text-gray-600">点击下方的算法卡片来查看详细介绍和演示</p>
+            </div>
+        </div>
+
+        <!-- 算法选择 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- 冒泡排序 -->
+            <div class="algorithm-card bg-white rounded-lg shadow-md p-6 cursor-pointer border-2 border-transparent hover:border-blue-500" data-algorithm="bubble">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">B</div>
+                    <h3 class="text-lg font-semibold text-gray-800">冒泡排序</h3>
+                </div>
+                <p class="text-gray-600 text-sm mb-3">重复遍历数组，比较相邻元素并交换位置</p>
+                <div class="flex justify-between text-xs text-gray-500">
+                    <span>时间复杂度: O(n²)</span>
+                    <span>空间复杂度: O(1)</span>
+                </div>
+                <button class="w-full mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+                    开始演示
+                </button>
+            </div>
+
+            <!-- 选择排序 -->
+            <div class="algorithm-card bg-white rounded-lg shadow-md p-6 cursor-pointer border-2 border-transparent hover:border-green-500" data-algorithm="selection">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">S</div>
+                    <h3 class="text-lg font-semibold text-gray-800">选择排序</h3>
+                </div>
+                <p class="text-gray-600 text-sm mb-3">每次选择最小元素放到已排序部分的末尾</p>
+                <div class="flex justify-between text-xs text-gray-500">
+                    <span>时间复杂度: O(n²)</span>
+                    <span>空间复杂度: O(1)</span>
+                </div>
+                <button class="w-full mt-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors">
+                    开始演示
+                </button>
+            </div>
+
+            <!-- 插入排序 -->
+            <div class="algorithm-card bg-white rounded-lg shadow-md p-6 cursor-pointer border-2 border-transparent hover:border-purple-500" data-algorithm="insertion">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold">I</div>
+                    <h3 class="text-lg font-semibold text-gray-800">插入排序</h3>
+                </div>
+                <p class="text-gray-600 text-sm mb-3">将元素插入到已排序部分的正确位置</p>
+                <div class="flex justify-between text-xs text-gray-500">
+                    <span>时间复杂度: O(n²)</span>
+                    <span>空间复杂度: O(1)</span>
+                </div>
+                <button class="w-full mt-4 px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition-colors">
+                    开始演示
+                </button>
+            </div>
+
+            <!-- 快速排序 -->
+            <div class="algorithm-card bg-white rounded-lg shadow-md p-6 cursor-pointer border-2 border-transparent hover:border-red-500" data-algorithm="quick">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center text-white font-bold">Q</div>
+                    <h3 class="text-lg font-semibold text-gray-800">快速排序</h3>
+                </div>
+                <p class="text-gray-600 text-sm mb-3">选择基准元素，分治递归排序</p>
+                <div class="flex justify-between text-xs text-gray-500">
+                    <span>时间复杂度: O(n log n)</span>
+                    <span>空间复杂度: O(log n)</span>
+                </div>
+                <button class="w-full mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors">
+                    开始演示
+                </button>
+            </div>
+
+            <!-- 归并排序 -->
+            <div class="algorithm-card bg-white rounded-lg shadow-md p-6 cursor-pointer border-2 border-transparent hover:border-yellow-500" data-algorithm="merge">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center text-white font-bold">M</div>
+                    <h3 class="text-lg font-semibold text-gray-800">归并排序</h3>
+                </div>
+                <p class="text-gray-600 text-sm mb-3">分治法：分割数组后合并有序子数组</p>
+                <div class="flex justify-between text-xs text-gray-500">
+                    <span>时间复杂度: O(n log n)</span>
+                    <span>空间复杂度: O(n)</span>
+                </div>
+                <button class="w-full mt-4 px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition-colors">
+                    开始演示
+                </button>
+            </div>
+
+            <!-- 堆排序 -->
+            <div class="algorithm-card bg-white rounded-lg shadow-md p-6 cursor-pointer border-2 border-transparent hover:border-indigo-500" data-algorithm="heap">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center text-white font-bold">H</div>
+                    <h3 class="text-lg font-semibold text-gray-800">堆排序</h3>
+                </div>
+                <p class="text-gray-600 text-sm mb-3">利用堆数据结构进行排序</p>
+                <div class="flex justify-between text-xs text-gray-500">
+                    <span>时间复杂度: O(n log n)</span>
+                    <span>空间复杂度: O(1)</span>
+                </div>
+                <button class="w-full mt-4 px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition-colors">
+                    开始演示
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class SortingVisualizer {
+            constructor() {
+                this.array = [];
+                this.arraySize = 20;
+                this.speed = 5;
+                this.isRunning = false;
+                this.stopRequested = false;
+                
+                this.initializeElements();
+                this.setupEventListeners();
+                this.generateArray();
+            }
+
+            initializeElements() {
+                this.arrayContainer = document.getElementById('arrayContainer');
+                this.algorithmInfo = document.getElementById('algorithmInfo');
+                this.arraySizeSlider = document.getElementById('arraySize');
+                this.speedSlider = document.getElementById('speed');
+                this.arraySizeValue = document.getElementById('arraySizeValue');
+                this.speedValue = document.getElementById('speedValue');
+                this.generateBtn = document.getElementById('generateArray');
+                this.stopBtn = document.getElementById('stopSort');
+            }
+
+            setupEventListeners() {
+                this.arraySizeSlider.addEventListener('input', (e) => {
+                    this.arraySize = parseInt(e.target.value);
+                    this.arraySizeValue.textContent = this.arraySize;
+                    if (!this.isRunning) {
+                        this.generateArray();
+                    }
+                });
+
+                this.speedSlider.addEventListener('input', (e) => {
+                    this.speed = parseInt(e.target.value);
+                    this.speedValue.textContent = this.speed;
+                });
+
+                this.generateBtn.addEventListener('click', () => {
+                    if (!this.isRunning) {
+                        this.generateArray();
+                    }
+                });
+
+                this.stopBtn.addEventListener('click', () => {
+                    this.stopSorting();
+                });
+
+                document.querySelectorAll('.algorithm-card').forEach(card => {
+                    card.addEventListener('click', () => {
+                        if (!this.isRunning) {
+                            const algorithm = card.dataset.algorithm;
+                            this.startSorting(algorithm);
+                        }
+                    });
+                });
+            }
+
+            generateArray() {
+                this.array = [];
+                for (let i = 0; i < this.arraySize; i++) {
+                    this.array.push(Math.floor(Math.random() * 200) + 10);
+                }
+                this.renderArray();
+            }
+
+            renderArray() {
+                this.arrayContainer.innerHTML = '';
+                const containerWidth = this.arrayContainer.clientWidth - 32;
+                const barWidth = Math.max(2, (containerWidth / this.arraySize) - 2);
+                
+                this.array.forEach((value, index) => {
+                    const bar = document.createElement('div');
+                    bar.className = 'bar bg-blue-500';
+                    bar.style.width = `${barWidth}px`;
+                    bar.style.height = `${value}px`;
+                    bar.style.marginRight = '2px';
+                    bar.style.display = 'inline-block';
+                    bar.id = `bar-${index}`;
+                    this.arrayContainer.appendChild(bar);
+                });
+            }
+
+            async startSorting(algorithm) {
+                if (this.isRunning) return;
+                
+                this.isRunning = true;
+                this.stopRequested = false;
+                this.generateBtn.disabled = true;
+                this.stopBtn.disabled = false;
+                
+                // 重置所有条形图颜色
+                this.resetBarColors();
+                
+                const algorithms = {
+                    bubble: () => this.bubbleSort(),
+                    selection: () => this.selectionSort(),
+                    insertion: () => this.insertionSort(),
+                    quick: () => this.quickSort(0, this.array.length - 1),
+                    merge: () => this.mergeSort(0, this.array.length - 1),
+                    heap: () => this.heapSort()
+                };
+
+                const algorithmNames = {
+                    bubble: '冒泡排序',
+                    selection: '选择排序',
+                    insertion: '插入排序',
+                    quick: '快速排序',
+                    merge: '归并排序',
+                    heap: '堆排序'
+                };
+
+                const algorithmDescriptions = {
+                    bubble: '冒泡排序通过重复遍历数组，比较相邻元素并在需要时交换它们的位置。较大的元素会像气泡一样"浮"到数组的末尾。',
+                    selection: '选择排序每次从未排序部分选择最小的元素，将其放到已排序部分的末尾。算法维护两个子数组：已排序和未排序。',
+                    insertion: '插入排序构建最终排序数组，每次取一个元素并将其插入到已排序部分的正确位置。类似于整理扑克牌的过程。',
+                    quick: '快速排序使用分治策略，选择一个基准元素，将数组分为小于和大于基准的两部分，然后递归排序这两部分。',
+                    merge: '归并排序使用分治法，将数组分割成更小的子数组，对它们进行排序，然后将有序的子数组合并成一个完整的有序数组。',
+                    heap: '堆排序利用堆数据结构的性质，首先将数组构建成最大堆，然后重复提取最大元素并重新调整堆结构。'
+                };
+
+                this.updateAlgorithmInfo(algorithmNames[algorithm], algorithmDescriptions[algorithm]);
+
+                try {
+                    await algorithms[algorithm]();
+                    if (!this.stopRequested) {
+                        this.markAllAsSorted();
+                    }
+                } catch (error) {
+                    console.error('排序过程中出现错误:', error);
+                }
+
+                this.isRunning = false;
+                this.generateBtn.disabled = false;
+                this.stopBtn.disabled = true;
+            }
+
+            stopSorting() {
+                this.stopRequested = true;
+            }
+
+            updateAlgorithmInfo(name, description) {
+                this.algorithmInfo.innerHTML = `
+                    <h3 class="font-semibold text-gray-800 mb-2">${name}</h3>
+                    <p class="text-gray-600">${description}</p>
+                `;
+            }
+
+            resetBarColors() {
+                document.querySelectorAll('.bar').forEach(bar => {
+                    bar.className = 'bar bg-blue-500';
+                });
+            }
+
+            markAllAsSorted() {
+                document.querySelectorAll('.bar').forEach(bar => {
+                    bar.className = 'bar bg-green-500';
+                });
+            }
+
+            async sleep(ms) {
+                const delay = 1000 / this.speed;
+                return new Promise(resolve => setTimeout(resolve, delay));
+            }
+
+            async highlightBars(indices, className) {
+                if (this.stopRequested) throw new Error('Sorting stopped');
+                
+                indices.forEach(index => {
+                    const bar = document.getElementById(`bar-${index}`);
+                    if (bar) {
+                        bar.className = `bar ${className}`;
+                    }
+                });
+                await this.sleep(100);
+            }
+
+            async swapBars(i, j) {
+                if (this.stopRequested) throw new Error('Sorting stopped');
+                
+                await this.highlightBars([i, j], 'bg-yellow-500');
+                
+                // 交换数组元素
+                [this.array[i], this.array[j]] = [this.array[j], this.array[i]];
+                
+                // 更新视觉表示
+                const barI = document.getElementById(`bar-${i}`);
+                const barJ = document.getElementById(`bar-${j}`);
+                if (barI && barJ) {
+                    const tempHeight = barI.style.height;
+                    barI.style.height = barJ.style.height;
+                    barJ.style.height = tempHeight;
+                }
+                
+                await this.sleep(200);
+                
+                // 重置颜色
+                if (barI) barI.className = 'bar bg-blue-500';
+                if (barJ) barJ.className = 'bar bg-blue-500';
+            }
+
+            // 冒泡排序
+            async bubbleSort() {
+                const n = this.array.length;
+                for (let i = 0; i < n - 1; i++) {
+                    for (let j = 0; j < n - i - 1; j++) {
+                        if (this.stopRequested) return;
+                        
+                        await this.highlightBars([j, j + 1], 'bg-red-500');
+                        
+                        if (this.array[j] > this.array[j + 1]) {
+                            await this.swapBars(j, j + 1);
+                        } else {
+                            // 重置颜色
+                            const barJ = document.getElementById(`bar-${j}`);
+                            const barJ1 = document.getElementById(`bar-${j + 1}`);
+                            if (barJ) barJ.className = 'bar bg-blue-500';
+                            if (barJ1) barJ1.className = 'bar bg-blue-500';
+                        }
+                    }
+                    // 标记已排序的元素
+                    const sortedBar = document.getElementById(`bar-${n - i - 1}`);
+                    if (sortedBar) sortedBar.className = 'bar bg-green-500';
+                }
+            }
+
+            // 选择排序
+            async selectionSort() {
+                const n = this.array.length;
+                for (let i = 0; i < n - 1; i++) {
+                    let minIdx = i;
+                    
+                    // 标记当前最小元素
+                    await this.highlightBars([minIdx], 'bg-yellow-500');
+                    
+                    for (let j = i + 1; j < n; j++) {
+                        if (this.stopRequested) return;
+                        
+                        await this.highlightBars([j], 'bg-red-500');
+                        
+                        if (this.array[j] < this.array[minIdx]) {
+                            // 重置之前的最小元素
+                            const prevMinBar = document.getElementById(`bar-${minIdx}`);
+                            if (prevMinBar) prevMinBar.className = 'bar bg-blue-500';
+                            
+                            minIdx = j;
+                            await this.highlightBars([minIdx], 'bg-yellow-500');
+                        } else {
+                            // 重置当前元素
+                            const currentBar = document.getElementById(`bar-${j}`);
+                            if (currentBar) currentBar.className = 'bar bg-blue-500';
+                        }
+                        
+                        await this.sleep(100);
+                    }
+                    
+                    if (minIdx !== i) {
+                        await this.swapBars(i, minIdx);
+                    }
+                    
+                    // 标记已排序的元素
+                    const sortedBar = document.getElementById(`bar-${i}`);
+                    if (sortedBar) sortedBar.className = 'bar bg-green-500';
+                }
+            }
+
+            // 插入排序
+            async insertionSort() {
+                const n = this.array.length;
+                for (let i = 1; i < n; i++) {
+                    if (this.stopRequested) return;
+                    
+                    let key = this.array[i];
+                    let j = i - 1;
+                    
+                    // 高亮当前要插入的元素
+                    await this.highlightBars([i], 'bg-yellow-500');
+                    
+                    while (j >= 0 && this.array[j] > key) {
+                        if (this.stopRequested) return;
+                        
+                        await this.highlightBars([j, j + 1], 'bg-red-500');
+                        
+                        this.array[j + 1] = this.array[j];
+                        
+                        // 更新视觉表示
+                        const barJ = document.getElementById(`bar-${j}`);
+                        const barJ1 = document.getElementById(`bar-${j + 1}`);
+                        if (barJ && barJ1) {
+                            barJ1.style.height = barJ.style.height;
+                        }
+                        
+                        j--;
+                        await this.sleep(200);
+                    }
+                    
+                    this.array[j + 1] = key;
+                    
+                    // 更新插入位置的视觉表示
+                    const insertBar = document.getElementById(`bar-${j + 1}`);
+                    if (insertBar) {
+                        insertBar.style.height = `${key}px`;
+                        insertBar.className = 'bar bg-blue-500';
+                    }
+                    
+                    await this.sleep(200);
+                }
+            }
+
+            // 快速排序
+            async quickSort(low, high) {
+                if (low < high && !this.stopRequested) {
+                    const pi = await this.partition(low, high);
+                    await this.quickSort(low, pi - 1);
+                    await this.quickSort(pi + 1, high);
+                }
+            }
+
+            async partition(low, high) {
+                const pivot = this.array[high];
+                let i = low - 1;
+                
+                // 高亮基准元素
+                await this.highlightBars([high], 'bg-yellow-500');
+                
+                for (let j = low; j < high; j++) {
+                    if (this.stopRequested) throw new Error('Sorting stopped');
+                    
+                    await this.highlightBars([j], 'bg-red-500');
+                    
+                    if (this.array[j] < pivot) {
+                        i++;
+                        if (i !== j) {
+                            await this.swapBars(i, j);
+                        }
+                    }
+                    
+                    // 重置颜色
+                    const barJ = document.getElementById(`bar-${j}`);
+                    if (barJ) barJ.className = 'bar bg-blue-500';
+                    
+                    await this.sleep(100);
+                }
+                
+                await this.swapBars(i + 1, high);
+                return i + 1;
+            }
+
+            // 归并排序
+            async mergeSort(left, right) {
+                if (left < right && !this.stopRequested) {
+                    const mid = Math.floor((left + right) / 2);
+                    
+                    await this.mergeSort(left, mid);
+                    await this.mergeSort(mid + 1, right);
+                    await this.merge(left, mid, right);
+                }
+            }
+
+            async merge(left, mid, right) {
+                const leftArr = this.array.slice(left, mid + 1);
+                const rightArr = this.array.slice(mid + 1, right + 1);
+                
+                let i = 0, j = 0, k = left;
+                
+                while (i < leftArr.length && j < rightArr.length) {
+                    if (this.stopRequested) throw new Error('Sorting stopped');
+                    
+                    await this.highlightBars([k], 'bg-yellow-500');
+                    
+                    if (leftArr[i] <= rightArr[j]) {
+                        this.array[k] = leftArr[i];
+                        i++;
+                    } else {
+                        this.array[k] = rightArr[j];
+                        j++;
+                    }
+                    
+                    // 更新视觉表示
+                    const bar = document.getElementById(`bar-${k}`);
+                    if (bar) {
+                        bar.style.height = `${this.array[k]}px`;
+                        bar.className = 'bar bg-blue-500';
+                    }
+                    
+                    k++;
+                    await this.sleep(200);
+                }
+                
+                while (i < leftArr.length) {
+                    if (this.stopRequested) throw new Error('Sorting stopped');
+                    this.array[k] = leftArr[i];
+                    const bar = document.getElementById(`bar-${k}`);
+                    if (bar) {
+                        bar.style.height = `${this.array[k]}px`;
+                    }
+                    i++;
+                    k++;
+                }
+                
+                while (j < rightArr.length) {
+                    if (this.stopRequested) throw new Error('Sorting stopped');
+                    this.array[k] = rightArr[j];
+                    const bar = document.getElementById(`bar-${k}`);
+                    if (bar) {
+                        bar.style.height = `${this.array[k]}px`;
+                    }
+                    j++;
+                    k++;
+                }
+            }
+
+            // 堆排序
+            async heapSort() {
+                const n = this.array.length;
+                
+                // 构建最大堆
+                for (let i = Math.floor(n / 2) - 1; i >= 0; i--) {
+                    await this.heapify(n, i);
+                }
+                
+                // 一个个从堆顶取元素
+                for (let i = n - 1; i > 0; i--) {
+                    if (this.stopRequested) return;
+                    
+                    await this.swapBars(0, i);
+                    
+                    // 标记已排序的元素
+                    const sortedBar = document.getElementById(`bar-${i}`);
+                    if (sortedBar) sortedBar.className = 'bar bg-green-500';
+                    
+                    await this.heapify(i, 0);
+                }
+            }
+
+            async heapify(n, i) {
+                let largest = i;
+                let left = 2 * i + 1;
+                let right = 2 * i + 2;
+                
+                if (left < n && this.array[left] > this.array[largest]) {
+                    largest = left;
+                }
+                
+                if (right < n && this.array[right] > this.array[largest]) {
+                    largest = right;
+                }
+                
+                if (largest !== i) {
+                    await this.highlightBars([i, largest], 'bg-red-500');
+                    await this.swapBars(i, largest);
+                    await this.heapify(n, largest);
+                }
+            }
+        }
+
+        // 初始化可视化器
+        document.addEventListener('DOMContentLoaded', () => {
+            new SortingVisualizer();
+        });
+    </script>
+</body>
+</html>
